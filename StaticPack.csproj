@@ -1,0 +1,56 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+    <PropertyGroup>
+        <TargetFramework>netstandard2.1</TargetFramework>
+        <LangVersion>9</LangVersion>
+        <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
+        <Nullable>disable</Nullable>
+        <AssemblyName>FFS.StaticPack</AssemblyName>
+        <RootNamespace>FFS.Libraries.StaticPack</RootNamespace>
+        <GeneratePackageOnBuild>true</GeneratePackageOnBuild>
+        <Version>1.0.0</Version>
+        <Authors>Felid-Force-Studios</Authors>
+        <Description>C# Simple binary serialization library</Description>
+        <Copyright>Felid-Force-Studios</Copyright>
+        <PackageLicense>https://github.com/Felid-Force-Studios/StaticPack/blob/master/LICENSE</PackageLicense>
+        <PackageTags>binary; gamedev; unity; staticpack</PackageTags>
+        <RepositoryUrl>https://github.com/Felid-Force-Studios/StaticPack</RepositoryUrl>
+    </PropertyGroup>
+
+    <PropertyGroup Condition="'$(Configuration)' == 'Debug'">
+        <PlatformTarget>AnyCPU</PlatformTarget>
+        <DebugSymbols>true</DebugSymbols>
+        <DebugType>full</DebugType>
+        <Optimize>false</Optimize>
+        <OutputPath>bin\Debug\</OutputPath>
+        <DefineConstants>FFS_PACK_ENABLE_DEBUG</DefineConstants>
+        <WarningLevel>4</WarningLevel>
+    </PropertyGroup>
+
+    <PropertyGroup Condition="'$(Configuration)' == 'Release'">
+        <PlatformTarget>AnyCPU</PlatformTarget>
+        <DebugType>pdbonly</DebugType>
+        <Optimize>true</Optimize>
+        <OutputPath>bin\Release\</OutputPath>
+        <WarningLevel>4</WarningLevel>
+    </PropertyGroup>
+
+    <ItemGroup>
+        <Content Include="README.md"/>
+    </ItemGroup>
+    <ItemGroup>
+        <None Remove="**/*.meta"/>
+        <None Remove="LICENSE.meta"/>
+    </ItemGroup>
+    <ItemGroup>
+      <PackageReference Include="ErrorProne.NET.CoreAnalyzers" Version="0.7.0-beta.1">
+        <PrivateAssets>all</PrivateAssets>
+        <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+      </PackageReference>
+      <PackageReference Include="ErrorProne.NET.Structs" Version="0.6.1-beta.1">
+        <PrivateAssets>all</PrivateAssets>
+        <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+      </PackageReference>
+    </ItemGroup>
+
+</Project>
