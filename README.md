@@ -433,3 +433,6 @@ public static class GameSerializers {
     }
 }
 ```
+
+# License
+[MIT license](./LICENSE.md)
