@@ -14,8 +14,8 @@ namespace FFS.Libraries.StaticPack {
     [Il2CppSetOption(Option.ArrayBoundsChecks, false)]
     [Il2CppEagerStaticClassConstruction]
     #endif
-    public static class BinaryPackContext {
-        static BinaryPackContext() {
+    public static class BinaryPack {
+        static BinaryPack() {
             RegisterAllReaders(static (ref BinaryPackReader reader) => reader.ReadSByte(), new UnmanagedPackArrayStrategy<sbyte>());
             RegisterAllReaders(static (ref BinaryPackReader reader) => reader.ReadByte(), new UnmanagedPackArrayStrategy<byte>());
             RegisterAllReaders(static (ref BinaryPackReader reader) => reader.ReadShort(), new UnmanagedPackArrayStrategy<short>());
@@ -57,38 +57,90 @@ namespace FFS.Libraries.StaticPack {
         
         [MethodImpl(AggressiveInlining)]
         public static void RegisterAllReaders<T, S>(BinaryReader<T> reader, S strategy = default) where S : IPackArrayStrategy<T> {
-            BinaryPackContext<T>.RegisterReader(reader);
+            BinaryPack<T>.RegisterReader(reader);
             strategy.RegisterReader();
-            BinaryPackContext<T[][]>.RegisterReader(static (ref BinaryPackReader reader) => reader.ReadArray<T[]>());
-            BinaryPackContext<T[][][]>.RegisterReader(static (ref BinaryPackReader reader) => reader.ReadArray<T[][]>());
-            BinaryPackContext<List<T>>.RegisterReader(static (ref BinaryPackReader reader) => reader.ReadList<T>());
-            BinaryPackContext<LinkedList<T>>.RegisterReader(static (ref BinaryPackReader reader) => reader.ReadLinkedList<T>());
-            BinaryPackContext<Queue<T>>.RegisterReader(static (ref BinaryPackReader reader) => reader.ReadQueue<T>());
-            BinaryPackContext<Stack<T>>.RegisterReader(static (ref BinaryPackReader reader) => reader.ReadStack<T>());
-            BinaryPackContext<HashSet<T>>.RegisterReader(static (ref BinaryPackReader reader) => reader.ReadHashSet<T>());
+            BinaryPack<T[][]>.RegisterReader(static (ref BinaryPackReader reader) => reader.ReadArray<T[]>());
+            BinaryPack<T[][][]>.RegisterReader(static (ref BinaryPackReader reader) => reader.ReadArray<T[][]>());
+            BinaryPack<List<T>>.RegisterReader(static (ref BinaryPackReader reader) => reader.ReadList<T>());
+            BinaryPack<LinkedList<T>>.RegisterReader(static (ref BinaryPackReader reader) => reader.ReadLinkedList<T>());
+            BinaryPack<Queue<T>>.RegisterReader(static (ref BinaryPackReader reader) => reader.ReadQueue<T>());
+            BinaryPack<Stack<T>>.RegisterReader(static (ref BinaryPackReader reader) => reader.ReadStack<T>());
+            BinaryPack<HashSet<T>>.RegisterReader(static (ref BinaryPackReader reader) => reader.ReadHashSet<T>());
         }
 
         [MethodImpl(AggressiveInlining)]
         public static void RegisterAllWriters<T, S>(BinaryWriter<T> writer, S strategy = default) where S : IPackArrayStrategy<T> {
-            BinaryPackContext<T>.RegisterWriter(writer);
+            BinaryPack<T>.RegisterWriter(writer);
             strategy.RegisterWriters();
-            BinaryPackContext<T[][]>.RegisterWriter(static (ref BinaryPackWriter writer, in T[][] value) => writer.WriteArray(value));
-            BinaryPackContext<T[][][]>.RegisterWriter(static (ref BinaryPackWriter writer, in T[][][] value) => writer.WriteArray(value)); 
-            BinaryPackContext<List<T>>.RegisterWriter(static (ref BinaryPackWriter writer, in List<T> value) => writer.WriteList(value));
-            BinaryPackContext<LinkedList<T>>.RegisterWriter(static (ref BinaryPackWriter writer, in LinkedList<T> value) => writer.WriteLinkedList(value));
-            BinaryPackContext<Queue<T>>.RegisterWriter(static (ref BinaryPackWriter writer, in Queue<T> value) => writer.WriteQueue(value));
-            BinaryPackContext<Stack<T>>.RegisterWriter(static (ref BinaryPackWriter writer, in Stack<T> value) => writer.WriteStack(value));
-            BinaryPackContext<HashSet<T>>.RegisterWriter(static (ref BinaryPackWriter writer, in HashSet<T> value) => writer.WriteHashSet(value));
+            BinaryPack<T[][]>.RegisterWriter(static (ref BinaryPackWriter writer, in T[][] value) => writer.WriteArray(value));
+            BinaryPack<T[][][]>.RegisterWriter(static (ref BinaryPackWriter writer, in T[][][] value) => writer.WriteArray(value)); 
+            BinaryPack<List<T>>.RegisterWriter(static (ref BinaryPackWriter writer, in List<T> value) => writer.WriteList(value));
+            BinaryPack<LinkedList<T>>.RegisterWriter(static (ref BinaryPackWriter writer, in LinkedList<T> value) => writer.WriteLinkedList(value));
+            BinaryPack<Queue<T>>.RegisterWriter(static (ref BinaryPackWriter writer, in Queue<T> value) => writer.WriteQueue(value));
+            BinaryPack<Stack<T>>.RegisterWriter(static (ref BinaryPackWriter writer, in Stack<T> value) => writer.WriteStack(value));
+            BinaryPack<HashSet<T>>.RegisterWriter(static (ref BinaryPackWriter writer, in HashSet<T> value) => writer.WriteHashSet(value));
         }
 
         [MethodImpl(AggressiveInlining)]
-        public static T Read<T>(this ref BinaryPackReader reader) => BinaryPackContext<T>.Read(ref reader);
+        public static T Read<T>(this ref BinaryPackReader reader) => BinaryPack<T>.Read(ref reader);
 
         [MethodImpl(AggressiveInlining)]
-        public static void Write<T>(this ref BinaryPackWriter writer, in T value) => BinaryPackContext<T>.Write(ref writer, in value);
+        public static T ReadFromBytes<T>(this byte[] bytes, bool gzip = false, uint byteSizeHint = 4096) {
+            return ReadFromBytes<T>(bytes, (uint) bytes.Length, 0, gzip, byteSizeHint);
+        }
         
         [MethodImpl(AggressiveInlining)]
-        public static void Write<T>(this ref BinaryPackWriter writer, T value) => BinaryPackContext<T>.Write(ref writer, in value);
+        public static T ReadFromBytes<T>(this byte[] bytes, uint size, uint position, bool gzip = false, uint byteSizeHint = 4096) {
+            if (gzip) {
+                var writer = BinaryPackWriter.CreateFromPool(byteSizeHint);
+                writer.WriteGzipData(bytes);
+                var reader = writer.AsReader();
+                var val =  BinaryPack<T>.Read(ref reader);
+                writer.Dispose();
+                return val;
+            } else {
+                var reader = new BinaryPackReader(bytes, size, position);
+                return BinaryPack<T>.Read(ref reader);
+            }
+        }
+        
+        [MethodImpl(AggressiveInlining)]
+        public static T ReadFromFile<T>(this string filePath, bool gzip = false, uint byteSizeHint = 4096) {
+            var writer = BinaryPackWriter.CreateFromPool(byteSizeHint);
+            writer.WriteFromFile(filePath, gzip);
+            var reader = writer.AsReader();
+            var val = BinaryPack<T>.Read(ref reader);
+            writer.Dispose();
+            return val;
+        }
+
+        [MethodImpl(AggressiveInlining)]
+        public static void Write<T>(this ref BinaryPackWriter writer, in T value) => BinaryPack<T>.Write(ref writer, in value);
+
+        [MethodImpl(AggressiveInlining)]
+        public static byte[] WriteToBytes<T>(this T value, uint byteSizeHint = 4096, bool gzip = false) {
+            var writer = BinaryPackWriter.CreateFromPool(byteSizeHint);
+            BinaryPack<T>.Write(ref writer, in value);
+            var result = writer.CopyToBytes(gzip);
+            writer.Dispose();
+            return result;
+        }
+        
+        [MethodImpl(AggressiveInlining)]
+        public static void WriteToBytes<T>(this T value, ref byte[] result, uint byteSizeHint = 4096, bool gzip = false) {
+            var writer = BinaryPackWriter.CreateFromPool(byteSizeHint);
+            BinaryPack<T>.Write(ref writer, in value);
+            writer.CopyToBytes(ref result, gzip);
+            writer.Dispose();
+        }
+
+        [MethodImpl(AggressiveInlining)]
+        public static void WriteToFile<T>(this T value, string filePath, bool gzip = false, bool flushToDisk = false, uint byteSizeHint = 4096) {
+            var writer = BinaryPackWriter.CreateFromPool(byteSizeHint);
+            BinaryPack<T>.Write(ref writer, in value);
+            writer.FlushToFile(filePath, gzip, flushToDisk);
+            writer.Dispose();
+        }
     }
 
     public delegate T BinaryReader<T>(ref BinaryPackReader reader);
@@ -100,7 +152,7 @@ namespace FFS.Libraries.StaticPack {
     [Il2CppSetOption(Option.ArrayBoundsChecks, false)]
     [Il2CppEagerStaticClassConstruction]
     #endif
-    public static class BinaryPackContext<T> {
+    public static class BinaryPack<T> {
         private static BinaryReader<T> _reader;
         private static BinaryWriter<T> _writer;
 

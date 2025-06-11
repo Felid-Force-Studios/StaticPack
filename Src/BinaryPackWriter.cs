@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Buffers;
 using System.Collections.Generic;
 using System.IO;
 using System.IO.Compression;
@@ -14,14 +15,24 @@ namespace FFS.Libraries.StaticPack {
     [Il2CppSetOption(Option.NullChecks, false)]
     [Il2CppSetOption(Option.ArrayBoundsChecks, false)]
     #endif
-    public struct BinaryPackWriter {
-        public byte[] Buffer;
+    public struct BinaryPackWriter: IDisposable {
+        private byte[] Buffer;
         public uint Position;
+        private readonly bool Rented;
+
+        public static BinaryPackWriter Create(byte[] buffer, uint position = 0) {
+            return new BinaryPackWriter(buffer, position, false);
+        }
+
+        public static BinaryPackWriter CreateFromPool(uint minByteSize = 512) {
+            return new BinaryPackWriter(ArrayPool<byte>.Shared.Rent((int) minByteSize), 0, true);
+        }
 
         [MethodImpl(AggressiveInlining)]
-        public BinaryPackWriter(byte[] buffer, uint position = 0) {
+        private BinaryPackWriter(byte[] buffer, uint position, bool rented) {
             Buffer = buffer;
             Position = position;
+            Rented = rented;
         }
 
         public int CurrentCapacity {
@@ -82,7 +93,23 @@ namespace FFS.Libraries.StaticPack {
             size |= size >> 16;
             size++;
 
-            Array.Resize(ref Buffer, (int) size);
+            if (Rented) {
+                var newBuffer = ArrayPool<byte>.Shared.Rent((int) size);
+                Array.Copy(Buffer, newBuffer, Buffer.Length);
+                ArrayPool<byte>.Shared.Return(Buffer);
+                Buffer = newBuffer;
+            } else {
+                Array.Resize(ref Buffer, (int) size);
+            }
+        }
+
+        [MethodImpl(AggressiveInlining)]
+        public void Dispose() {
+            if (Rented && Buffer != null) {
+                ArrayPool<byte>.Shared.Return(Buffer);
+            }
+
+            Buffer = null;
         }
 
         [MethodImpl(AggressiveInlining)]
@@ -111,6 +138,12 @@ namespace FFS.Libraries.StaticPack {
 
             Buffer[Position++] = 1;
             return true;
+        }
+
+        [MethodImpl(AggressiveInlining)]
+        public void WriteNotNullFlag() {
+            EnsureSize(sizeof(byte));
+            Buffer[Position++] = 1;
         }
 
         #region PRIMITIVES
@@ -365,7 +398,7 @@ namespace FFS.Libraries.StaticPack {
         [MethodImpl(AggressiveInlining)]
         public void WriteNullable<T>(in T? value) where T : struct {
             if (WriteNotNullFlag(value)) {
-                BinaryPackContext<T>.Write(ref this, value!.Value);
+                BinaryPack<T>.Write(ref this, value!.Value);
             }
         }
 
@@ -440,18 +473,21 @@ namespace FFS.Libraries.StaticPack {
 
         #region COLLECTIONS
         [MethodImpl(AggressiveInlining)]
-        public void WriteArrayUnmanaged<T>(T[] value, int count = -1) where T : unmanaged {
-            if (WriteNotNullFlag(value)) {
-                var len = count >= 0 ? count : value.Length;
+        public void WriteArrayUnmanaged<T>(T[] value) where T : unmanaged {
+            WriteArrayUnmanaged(value, 0, value.Length);
+        }
 
-                WriteInt(len);
+        [MethodImpl(AggressiveInlining)]
+        public void WriteArrayUnmanaged<T>(T[] value, int idx, int count) where T : unmanaged {
+            if (WriteNotNullFlag(value)) {
+                WriteInt(count);
                 var position = MakePoint(sizeof(uint));
-                if (len > 0) {
+                if (count > 0) {
                     unsafe {
-                        var size = (uint) (len * sizeof(T));
+                        var size = (uint) (count * sizeof(T));
                         EnsureSize(size);
                         fixed (byte* bytePtr = &Buffer[Position]) {
-                            fixed (void* dataPtr = &value[0]) {
+                            fixed (void* dataPtr = &value[idx]) {
                                 System.Buffer.MemoryCopy(dataPtr, bytePtr, size, size);
                             }
                         }
@@ -522,14 +558,33 @@ namespace FFS.Libraries.StaticPack {
         }
         
         [MethodImpl(AggressiveInlining)]
-        public void WriteArray<T>(T[] value, int count = -1) {
+        public void WriteArray<T>(T[] value) {
+            WriteArray(value, 0, value.Length);
+        }
+
+        public delegate void WriteCollectionDelegate(ref BinaryPackWriter writer, int idx);
+        
+        [MethodImpl(AggressiveInlining)]
+        public void WriteCollection(int idx, int count, WriteCollectionDelegate @delegate) {
+            WriteNotNullFlag();
+            WriteInt(count);
+            var position = MakePoint(sizeof(uint));
+
+            for (var i = idx; i < idx + count; i++) {
+                @delegate(ref this, i);
+            }
+
+            WriteUintAt(position, Position - (position + sizeof(uint)));
+        }
+        
+        [MethodImpl(AggressiveInlining)]
+        public void WriteArray<T>(T[] value, int idx, int count) {
             if (WriteNotNullFlag(value)) {
-                var len = count >= 0 ? count : value.Length;
-                WriteInt(len);
+                WriteInt(count);
                 var position = MakePoint(sizeof(uint));
 
-                for (var i = 0; i < len; i++) {
-                    BinaryPackContext<T>.Write(ref this, in value[i]);
+                for (var i = idx; i < idx + count; i++) {
+                    BinaryPack<T>.Write(ref this, in value[i]);
                 }
 
                 WriteUintAt(position, Position - (position + sizeof(uint)));
@@ -548,7 +603,7 @@ namespace FFS.Libraries.StaticPack {
 
                 for (var i0 = 0; i0 < dim0; i0++) {
                     for (var i1 = 0; i1 < dim1; i1++) {
-                        BinaryPackContext<T>.Write(ref this, in value[i0, i1]);
+                        BinaryPack<T>.Write(ref this, in value[i0, i1]);
                     }
                 }
                 WriteUintAt(position, Position - (position + sizeof(uint)));
@@ -570,7 +625,7 @@ namespace FFS.Libraries.StaticPack {
                 for (var i0 = 0; i0 < dim0; i0++) {
                     for (var i1 = 0; i1 < dim1; i1++) {
                         for (var i2 = 0; i2 < dim2; i2++) {
-                            BinaryPackContext<T>.Write(ref this, in value[i0, i1, i2]);
+                            BinaryPack<T>.Write(ref this, in value[i0, i1, i2]);
                         }
                     }
                 }
@@ -585,7 +640,7 @@ namespace FFS.Libraries.StaticPack {
                 WriteInt(len);
                 var position = MakePoint(sizeof(uint));
                 for (var i = 0; i < len; i++) {
-                    BinaryPackContext<T>.Write(ref this, value[i]);
+                    BinaryPack<T>.Write(ref this, value[i]);
                 }
                 WriteUintAt(position, Position - (position + sizeof(uint)));
             }
@@ -597,7 +652,7 @@ namespace FFS.Libraries.StaticPack {
                 WriteInt(value.Count);
                 var position = MakePoint(sizeof(uint));
                 foreach (var val in value) {
-                    BinaryPackContext<T>.Write(ref this, in val);
+                    BinaryPack<T>.Write(ref this, in val);
                 }
                 WriteUintAt(position, Position - (position + sizeof(uint)));
             }
@@ -610,7 +665,7 @@ namespace FFS.Libraries.StaticPack {
                 var position = MakePoint(sizeof(uint));
                 foreach (var val in value) {
                     var value1 = val;
-                    BinaryPackContext<T>.Write(ref this, in value1);
+                    BinaryPack<T>.Write(ref this, in value1);
                 }
                 WriteUintAt(position, Position - (position + sizeof(uint)));
             }
@@ -622,7 +677,7 @@ namespace FFS.Libraries.StaticPack {
                 WriteInt(value.Count);
                 var position = MakePoint(sizeof(uint));
                 foreach (var val in value) {
-                    BinaryPackContext<T>.Write(ref this, in val);
+                    BinaryPack<T>.Write(ref this, in val);
                 }
                 WriteUintAt(position, Position - (position + sizeof(uint)));
             }
@@ -635,7 +690,7 @@ namespace FFS.Libraries.StaticPack {
                 var position = MakePoint(sizeof(uint));
 
                 foreach (var val in value) {
-                    BinaryPackContext<T>.Write(ref this, in val);
+                    BinaryPack<T>.Write(ref this, in val);
                 }
                 WriteUintAt(position, Position - (position + sizeof(uint)));
             }
@@ -647,8 +702,8 @@ namespace FFS.Libraries.StaticPack {
                 WriteInt(value.Count);
                 var position = MakePoint(sizeof(uint));
                 foreach (var (key, val) in value) {
-                    BinaryPackContext<K>.Write(ref this, in key);
-                    BinaryPackContext<V>.Write(ref this, in val);
+                    BinaryPack<K>.Write(ref this, in key);
+                    BinaryPack<V>.Write(ref this, in val);
                 }
                 WriteUintAt(position, Position - (position + sizeof(uint)));
             }
@@ -692,13 +747,14 @@ namespace FFS.Libraries.StaticPack {
 
         [MethodImpl(AggressiveInlining)]
         public void WriteFromFile(string filePath, bool gzip = false, uint bufferSize = 4096) {
-            using var fileStream = new FileStream(filePath, FileMode.Open, FileAccess.Read, FileShare.None, bufferSize: (int) Math.Min(bufferSize, Position));
+            using var fileStream = new FileStream(filePath, FileMode.Open, FileAccess.Read, FileShare.None, bufferSize: (int) bufferSize);
             if (gzip) {
                 using var gzipStream = new GZipStream(fileStream, CompressionMode.Decompress, false);
                 EnsureSize(bufferSize);
                 int bytesRead;
                 while ((bytesRead = gzipStream.Read(Buffer, (int) Position, (int) bufferSize)) > 0) {
                     Skip((uint) bytesRead);
+                    EnsureSize(bufferSize);
                 }
             } else {
                 var streamLength = fileStream.Length;
@@ -800,6 +856,7 @@ namespace FFS.Libraries.StaticPack {
             int bytesRead;
             while ((bytesRead = gzipStream.Read(Buffer, (int) Position, (int) bufferSize)) > 0) {
                 Skip((uint) bytesRead);
+                EnsureSize(bufferSize);
             }
         }
     }

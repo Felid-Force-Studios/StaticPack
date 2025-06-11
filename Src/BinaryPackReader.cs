@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Buffers;
 using System.Collections.Generic;
 using System.Runtime.CompilerServices;
 using System.Text;
@@ -23,6 +24,10 @@ namespace FFS.Libraries.StaticPack {
 
         [MethodImpl(AggressiveInlining)]
         public BinaryPackReader(byte[] buffer, uint size, uint position) {
+            #if DEBUG || FFS_PACK_ENABLE_DEBUG
+            if (buffer == null) throw new Exception("buffer is null");
+            if (position + size > buffer.Length) throw new Exception("incorrect position or size");
+            #endif
             Buffer = buffer;
             Position = position;
             Size = size;
@@ -30,7 +35,7 @@ namespace FFS.Libraries.StaticPack {
 
         [MethodImpl(AggressiveInlining)]
         public BinaryPackWriter AsWriter() {
-            return new BinaryPackWriter(Buffer, Size);
+            return BinaryPackWriter.Create(Buffer, Size);
         }
 
         [MethodImpl(AggressiveInlining)]
@@ -41,12 +46,12 @@ namespace FFS.Libraries.StaticPack {
         [MethodImpl(AggressiveInlining)]
         public BinaryPackWriter AsWriterCompact() {
             if (Position == Size) {
-                return new BinaryPackWriter(Buffer, 0);
+                return BinaryPackWriter.Create(Buffer, 0);
             }
 
             var count = Size - Position;
             Array.Copy(Buffer, Position, Buffer, 0, count);
-            var writer = new BinaryPackWriter(Buffer, count);
+            var writer = BinaryPackWriter.Create(Buffer, count);
             Buffer = null;
             return writer;
         }
@@ -396,7 +401,7 @@ namespace FFS.Libraries.StaticPack {
         public T? ReadNullable<T>() where T : struct {
             if (ReadNullFlag()) return null;
 
-            return BinaryPackContext<T>.Read(ref this);
+            return BinaryPack<T>.Read(ref this);
         }
 
         [MethodImpl(AggressiveInlining)]
@@ -504,6 +509,39 @@ namespace FFS.Libraries.StaticPack {
 
             return result;
         }
+        
+        [MethodImpl(AggressiveInlining)]
+        public ArraySegment<T> ReadArrayUnmanagedPooled<T>(out ArrayPoolHandle<T> poolHandle) where T : unmanaged {
+            poolHandle = default;
+            if (ReadNullFlag()) return default;
+
+            var count = ReadInt();
+            var byteSize = ReadUint();
+            T[] result;
+            
+            if (count > 0) {
+                result = ArrayPool<T>.Shared.Rent(count);
+                poolHandle = new ArrayPoolHandle<T>(result);
+                unsafe {
+                    #if DEBUG || FFS_PACK_ENABLE_DEBUG
+                    var actualSize = (uint) (count * sizeof(T));
+                    if (byteSize != actualSize) throw new Exception($"[ReadArrayUnmanaged<{typeof(T)}>] The number of bytes has changed - stored {byteSize}, actual {actualSize}");
+                    #endif
+
+                    fixed (byte* bytePtr = &Buffer[Position]) {
+                        fixed (void* dataPtr = &result[0]) {
+                            System.Buffer.MemoryCopy(bytePtr, dataPtr, byteSize, byteSize);
+                        }
+                    }
+
+                    Position += byteSize;
+                }
+            } else {
+                result = Array.Empty<T>();
+            }
+
+            return new ArraySegment<T>(result, 0, count);
+        }
 
         [MethodImpl(AggressiveInlining)]
         public void ReadArrayUnmanaged<T>(ref T[] result) where T : unmanaged {
@@ -606,10 +644,33 @@ namespace FFS.Libraries.StaticPack {
             Position += sizeof(uint); // byteSize
             var res = new T[count];
             for (var i = 0; i < count; i++) {
-                res[i] = BinaryPackContext<T>.Read(ref this);
+                res[i] = BinaryPack<T>.Read(ref this);
             }
 
             return res;
+        }
+        
+        [MethodImpl(AggressiveInlining)]
+        public ArraySegment<T> ReadArrayPooled<T>(out ArrayPoolHandle<T> poolHandle) {
+            poolHandle = default;
+            if (ReadNullFlag()) return default;
+            
+            var count = ReadInt();
+            Position += sizeof(uint); // byteSize
+            T[] result;
+
+            if (count > 0) {
+                result = ArrayPool<T>.Shared.Rent(count);
+                poolHandle = new ArrayPoolHandle<T>(result);
+                
+                for (var i = 0; i < count; i++) {
+                    result[i] = BinaryPack<T>.Read(ref this);
+                }
+            } else {
+                result = Array.Empty<T>();
+            }
+
+            return new ArraySegment<T>(result, 0, count);
         }
 
         [MethodImpl(AggressiveInlining)]
@@ -623,7 +684,7 @@ namespace FFS.Libraries.StaticPack {
             }
 
             for (var i = 0; i < count; i++) {
-                result[i] = BinaryPackContext<T>.Read(ref this);
+                result[i] = BinaryPack<T>.Read(ref this);
             }
         }
 
@@ -638,7 +699,7 @@ namespace FFS.Libraries.StaticPack {
             var res = new T[dim0, dim1];
             for (var i0 = 0; i0 < dim0; i0++) {
                 for (var i1 = 0; i1 < dim1; i1++) {
-                    res[i0, i1] = BinaryPackContext<T>.Read(ref this);
+                    res[i0, i1] = BinaryPack<T>.Read(ref this);
                 }
             }
 
@@ -657,7 +718,7 @@ namespace FFS.Libraries.StaticPack {
             for (var i0 = 0; i0 < dim0; i0++) {
                 for (var i1 = 0; i1 < dim1; i1++) {
                     for (var i2 = 0; i2 < dim2; i2++) {
-                        res[i0, i1, i2] = BinaryPackContext<T>.Read(ref this);
+                        res[i0, i1, i2] = BinaryPack<T>.Read(ref this);
                     }
                 }
             }
@@ -724,7 +785,7 @@ namespace FFS.Libraries.StaticPack {
             Position += sizeof(int); // byteSize
             var result = new List<T>(count);
             for (var i = 0; i < count; i++) {
-                result.Add(BinaryPackContext<T>.Read(ref this));
+                result.Add(BinaryPack<T>.Read(ref this));
             }
 
             return result;
@@ -744,7 +805,7 @@ namespace FFS.Libraries.StaticPack {
                 }
 
                 for (var i = 0; i < count; i++) {
-                    result.Add(BinaryPackContext<T>.Read(ref this));
+                    result.Add(BinaryPack<T>.Read(ref this));
                 }
             }
         }
@@ -767,7 +828,7 @@ namespace FFS.Libraries.StaticPack {
             Position += sizeof(int); // byteSize
             var result = new Queue<T>(count);
             for (var i = 0; i < count; i++) {
-                result.Enqueue(BinaryPackContext<T>.Read(ref this));
+                result.Enqueue(BinaryPack<T>.Read(ref this));
             }
 
             return result;
@@ -787,7 +848,7 @@ namespace FFS.Libraries.StaticPack {
                 }
 
                 for (var i = 0; i < count; i++) {
-                    result.Enqueue(BinaryPackContext<T>.Read(ref this));
+                    result.Enqueue(BinaryPack<T>.Read(ref this));
                 }
             }
         }
@@ -810,7 +871,7 @@ namespace FFS.Libraries.StaticPack {
             Position += sizeof(int); // byteSize
             var result = new Stack<T>(count);
             for (var i = 0; i < count; i++) {
-                result.Push(BinaryPackContext<T>.Read(ref this));
+                result.Push(BinaryPack<T>.Read(ref this));
             }
 
             return result;
@@ -830,7 +891,7 @@ namespace FFS.Libraries.StaticPack {
                 }
 
                 for (var i = 0; i < count; i++) {
-                    result.Push(BinaryPackContext<T>.Read(ref this));
+                    result.Push(BinaryPack<T>.Read(ref this));
                 }
             }
         }
@@ -853,7 +914,7 @@ namespace FFS.Libraries.StaticPack {
             Position += sizeof(int); // byteSize
             var result = new LinkedList<T>();
             for (var i = 0; i < count; i++) {
-                result.AddLast(BinaryPackContext<T>.Read(ref this));
+                result.AddLast(BinaryPack<T>.Read(ref this));
             }
 
             return result;
@@ -873,7 +934,7 @@ namespace FFS.Libraries.StaticPack {
                 }
 
                 for (var i = 0; i < count; i++) {
-                    result.AddLast(BinaryPackContext<T>.Read(ref this));
+                    result.AddLast(BinaryPack<T>.Read(ref this));
                 }
             }
         }
@@ -896,7 +957,7 @@ namespace FFS.Libraries.StaticPack {
             SkipNext(sizeof(int)); // byteSize
             var res = new HashSet<T>(count);
             for (var i = 0; i < count; i++) {
-                res.Add(BinaryPackContext<T>.Read(ref this));
+                res.Add(BinaryPack<T>.Read(ref this));
             }
 
             return res;
@@ -916,7 +977,7 @@ namespace FFS.Libraries.StaticPack {
                 }
 
                 for (var i = 0; i < count; i++) {
-                    result.Add(BinaryPackContext<T>.Read(ref this));
+                    result.Add(BinaryPack<T>.Read(ref this));
                 }
             }
         }
@@ -939,8 +1000,8 @@ namespace FFS.Libraries.StaticPack {
             SkipNext(sizeof(int)); // byteSize
             var result = new Dictionary<K, V>(count);
             for (var i = 0; i < count; i++) {
-                var key = BinaryPackContext<K>.Read(ref this);
-                var val = BinaryPackContext<V>.Read(ref this);
+                var key = BinaryPack<K>.Read(ref this);
+                var val = BinaryPack<V>.Read(ref this);
                 result[key] = val;
             }
 
@@ -961,8 +1022,8 @@ namespace FFS.Libraries.StaticPack {
                 }
 
                 for (var i = 0; i < count; i++) {
-                    var key = BinaryPackContext<K>.Read(ref this);
-                    var val = BinaryPackContext<V>.Read(ref this);
+                    var key = BinaryPack<K>.Read(ref this);
+                    var val = BinaryPack<V>.Read(ref this);
                     result[key] = val;
                 }
             }
@@ -978,5 +1039,25 @@ namespace FFS.Libraries.StaticPack {
             SkipArray();
         }
         #endregion
+    }
+    
+    #if ENABLE_IL2CPP
+    [Il2CppSetOption(Option.NullChecks, false)]
+    [Il2CppSetOption(Option.ArrayBoundsChecks, false)]
+    #endif
+    public struct ArrayPoolHandle<T> {
+        private T[] _value;
+        
+        public ArrayPoolHandle(T[] value) {
+            _value = value;
+        }
+
+        [MethodImpl(AggressiveInlining)]
+        public void Return() {
+            if (_value != null) {
+                ArrayPool<T>.Shared.Return(_value);
+                _value = null;
+            }
+        }
     }
 }
