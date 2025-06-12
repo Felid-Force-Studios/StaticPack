@@ -6,8 +6,7 @@ using Unity.IL2CPP.CompilerServices;
 
 namespace FFS.Libraries.StaticPack {
     public interface IPackArrayStrategy {
-        public void RegisterWriters();
-        public void RegisterReader();
+        public void Register();
     }
 
     public interface IPackArrayStrategy<T> : IPackArrayStrategy {
@@ -51,19 +50,11 @@ namespace FFS.Libraries.StaticPack {
         public void WriteArray(ref BinaryPackWriter writer, T[,,] value) => writer.WriteArrayUnmanaged(value);
 
         [MethodImpl(AggressiveInlining)]
-        public void RegisterWriters() {
-            BinaryPack<T?>.RegisterWriter(static (ref BinaryPackWriter writer, in T? value) => writer.WriteNullable(in value));
-            BinaryPack<T[]>.RegisterWriter(static (ref BinaryPackWriter writer, in T[] value) => writer.WriteArrayUnmanaged(value));
-            BinaryPack<T[,]>.RegisterWriter(static (ref BinaryPackWriter writer, in T[,] value) => writer.WriteArrayUnmanaged(value));
-            BinaryPack<T[,,]>.RegisterWriter(static (ref BinaryPackWriter writer, in T[,,] value) => writer.WriteArrayUnmanaged(value));
-        }
-
-        [MethodImpl(AggressiveInlining)]
-        public void RegisterReader() {
-            BinaryPack<T?>.RegisterReader(static (ref BinaryPackReader reader) => reader.ReadNullable<T>());
-            BinaryPack<T[]>.RegisterReader(static (ref BinaryPackReader reader) => reader.ReadArrayUnmanaged<T>());
-            BinaryPack<T[,]>.RegisterReader(static (ref BinaryPackReader reader) => reader.ReadArray2DUnmanaged<T>());
-            BinaryPack<T[,,]>.RegisterReader(static (ref BinaryPackReader reader) => reader.ReadArray3DUnmanaged<T>());
+        public void Register() {
+            BinaryPack<T?>.Register(static (ref BinaryPackWriter writer, in T? value) => writer.WriteNullable(in value), static (ref BinaryPackReader reader) => reader.ReadNullable<T>());
+            BinaryPack<T[]>.Register(static (ref BinaryPackWriter writer, in T[] value) => writer.WriteArrayUnmanaged(value), static (ref BinaryPackReader reader) => reader.ReadArrayUnmanaged<T>());
+            BinaryPack<T[,]>.Register(static (ref BinaryPackWriter writer, in T[,] value) => writer.WriteArrayUnmanaged(value), static (ref BinaryPackReader reader) => reader.ReadArray2DUnmanaged<T>());
+            BinaryPack<T[,,]>.Register(static (ref BinaryPackWriter writer, in T[,,] value) => writer.WriteArrayUnmanaged(value), static (ref BinaryPackReader reader) => reader.ReadArray3DUnmanaged<T>());
         }
     }
 
@@ -97,19 +88,11 @@ namespace FFS.Libraries.StaticPack {
         public void WriteArray(ref BinaryPackWriter writer, T[,,] value) => writer.WriteArray(value);
 
         [MethodImpl(AggressiveInlining)]
-        public void RegisterWriters() {
-            BinaryPack<T?>.RegisterWriter(static (ref BinaryPackWriter writer, in T? value) => writer.WriteNullable(in value));
-            BinaryPack<T[]>.RegisterWriter(static (ref BinaryPackWriter writer, in T[] value) => writer.WriteArray(value));
-            BinaryPack<T[,]>.RegisterWriter(static (ref BinaryPackWriter writer, in T[,] value) => writer.WriteArray(value));
-            BinaryPack<T[,,]>.RegisterWriter(static (ref BinaryPackWriter writer, in T[,,] value) => writer.WriteArray(value));
-        }
-
-        [MethodImpl(AggressiveInlining)]
-        public void RegisterReader() {
-            BinaryPack<T?>.RegisterReader(static (ref BinaryPackReader reader) => reader.ReadNullable<T>());
-            BinaryPack<T[]>.RegisterReader(static (ref BinaryPackReader reader) => reader.ReadArray<T>());
-            BinaryPack<T[,]>.RegisterReader(static (ref BinaryPackReader reader) => reader.ReadArray2D<T>());
-            BinaryPack<T[,,]>.RegisterReader(static (ref BinaryPackReader reader) => reader.ReadArray3D<T>());
+        public void Register() {
+            BinaryPack<T?>.Register(static (ref BinaryPackWriter writer, in T? value) => writer.WriteNullable(in value), static (ref BinaryPackReader reader) => reader.ReadNullable<T>());
+            BinaryPack<T[]>.Register(static (ref BinaryPackWriter writer, in T[] value) => writer.WriteArray(value), static (ref BinaryPackReader reader) => reader.ReadArray<T>());
+            BinaryPack<T[,]>.Register(static (ref BinaryPackWriter writer, in T[,] value) => writer.WriteArray(value), static (ref BinaryPackReader reader) => reader.ReadArray2D<T>());
+            BinaryPack<T[,,]>.Register(static (ref BinaryPackWriter writer, in T[,,] value) => writer.WriteArray(value), static (ref BinaryPackReader reader) => reader.ReadArray3D<T>());
         }
     }
 
@@ -143,17 +126,10 @@ namespace FFS.Libraries.StaticPack {
         public void WriteArray(ref BinaryPackWriter writer, T[,,] value) => writer.WriteArray(value);
 
         [MethodImpl(AggressiveInlining)]
-        public void RegisterWriters() {
-            BinaryPack<T[]>.RegisterWriter(static (ref BinaryPackWriter writer, in T[] value) => writer.WriteArray(value));
-            BinaryPack<T[,]>.RegisterWriter(static (ref BinaryPackWriter writer, in T[,] value) => writer.WriteArray(value));
-            BinaryPack<T[,,]>.RegisterWriter(static (ref BinaryPackWriter writer, in T[,,] value) => writer.WriteArray(value));
-        }
-
-        [MethodImpl(AggressiveInlining)]
-        public void RegisterReader() {
-            BinaryPack<T[]>.RegisterReader(static (ref BinaryPackReader reader) => reader.ReadArray<T>());
-            BinaryPack<T[,]>.RegisterReader(static (ref BinaryPackReader reader) => reader.ReadArray2D<T>());
-            BinaryPack<T[,,]>.RegisterReader(static (ref BinaryPackReader reader) => reader.ReadArray3D<T>());
+        public void Register() {
+            BinaryPack<T[]>.Register(static (ref BinaryPackWriter writer, in T[] value) => writer.WriteArray(value), static (ref BinaryPackReader reader) => reader.ReadArray<T>());
+            BinaryPack<T[,]>.Register(static (ref BinaryPackWriter writer, in T[,] value) => writer.WriteArray(value), static (ref BinaryPackReader reader) => reader.ReadArray2D<T>());
+            BinaryPack<T[,,]>.Register(static (ref BinaryPackWriter writer, in T[,,] value) => writer.WriteArray(value), static (ref BinaryPackReader reader) => reader.ReadArray3D<T>());
         }
     }
 }

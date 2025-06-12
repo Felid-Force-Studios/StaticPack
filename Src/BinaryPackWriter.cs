@@ -16,9 +16,9 @@ namespace FFS.Libraries.StaticPack {
     [Il2CppSetOption(Option.ArrayBoundsChecks, false)]
     #endif
     public struct BinaryPackWriter: IDisposable {
-        private byte[] Buffer;
+        public byte[] Buffer;
         public uint Position;
-        private readonly bool Rented;
+        public readonly bool Rented;
 
         public static BinaryPackWriter Create(byte[] buffer, uint position = 0) {
             return new BinaryPackWriter(buffer, position, false);
@@ -850,7 +850,12 @@ namespace FFS.Libraries.StaticPack {
 
         [MethodImpl(AggressiveInlining)]
         public void WriteGzipData(byte[] data, uint bufferSize = 4096) {
-            using var memoryStream = new MemoryStream(data);
+            WriteGzipData(data, 0, data.Length, bufferSize);
+        }
+
+        [MethodImpl(AggressiveInlining)]
+        public void WriteGzipData(byte[] data, int index, int count, uint bufferSize = 4096) {
+            using var memoryStream = new MemoryStream(data, index, count);
             using var gzipStream = new GZipStream(memoryStream, CompressionMode.Decompress, false);
             EnsureSize(bufferSize);
             int bytesRead;

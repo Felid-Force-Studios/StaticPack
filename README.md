@@ -81,8 +81,7 @@ public struct Person {
     }
 }
 
-BinaryPack.RegisterAllWriters<Person, StructPackArrayStrategy<Person>>(Person.Write);
-BinaryPack.RegisterAllReaders<Person, StructPackArrayStrategy<Person>>(Person.Read);
+BinaryPack.RegisterWithCollections<Person, StructPackArrayStrategy<Person>>(Person.Write, Person.Read);
 
 writer.Write(new Person { Name = "Alice", Age = 20, BirthDate = DateTime.Now });
 
@@ -265,12 +264,12 @@ Central registry of serializers
 // Initialization of context
 static void Init();
 
-// Registration of custom serializers
-static void RegisterAllReaders<T, S>(BinaryReader<T> reader, S strategy = default)
+// Registration of custom serializers with base collection types
+static void RegisterWithCollections<T, S>(BinaryWriter<T> writer, BinaryReader<T> reader, S strategy = default)
     where S : IPackArrayStrategy<T>;
-    
-static void RegisterAllWriters<T, S>(BinaryWriter<T> writer, S strategy = default)
-    where S : IPackArrayStrategy<T>;
+
+// Registration of custom serializers without base collection types
+static void Register<T>(BinaryWriter<T> writer, BinaryReader<T> reader);
 
 // Extension methods for Reader/Writer
 static T Read<T>(this ref BinaryPackReader reader);
@@ -301,22 +300,18 @@ public struct Vector3 {
 }
 
 // Registration
-BinaryPack.RegisterAllWriters(
+BinaryPack.RegisterWithCollections(
     (ref BinaryPackWriter writer, in Vector3 v) => {
         writer.WriteFloat(v.X);
         writer.WriteFloat(v.Y);
         writer.WriteFloat(v.Z);
     },
-    new UnmanagedPackArrayStrategy<Vector3>()  // Using an unmanaged strategy
-);
-
-BinaryPack.RegisterAllReaders(
     (ref BinaryPackReader reader) => new Vector3 {
         X = reader.ReadFloat(),
         Y = reader.ReadFloat(),
         Z = reader.ReadFloat()
     },
-    new UnmanagedPackArrayStrategy<Vector3>()
+    new UnmanagedPackArrayStrategy<Vector3>()  // Using an unmanaged strategy
 );
 ```
 
@@ -349,16 +344,12 @@ public static class GameSerializers {
     }
     
     private static void RegisterGameStateSerializers() {
-        BinaryPack.RegisterAllWriters(
+        BinaryPack.RegisterWithCollections(
             (ref BinaryPackWriter writer, in GameState state) => 
                 writer.WriteInt(state.Level);
                 writer.WriteArray(state.Players);
                 writer.WriteDictionary(state.Inventory);
             },
-            new ClassPackArrayStrategy<GameState>()
-        );
-        
-        BinaryPack.RegisterAllReaders(
             (ref BinaryPackReader reader) => new GameState {
                 Level = reader.ReadInt(),
                 Players = reader.ReadArray<Player>(),
@@ -369,15 +360,11 @@ public static class GameSerializers {
     }
 
     private static void RegisterPlayerSerializers() {
-        BinaryPack.RegisterAllWriters(
+        BinaryPack.RegisterWithCollections(
             (ref BinaryPackWriter writer, in Player player) => {
                 writer.WriteString16(player.Name);
                 writer.Write(player.Position); // Uses a registered Vector3 serializer
             },
-            new StructPackArrayStrategy<Player>()
-        );
-        
-        BinaryPack.RegisterAllReaders(
             (ref BinaryPackReader reader) => new Player {
                 Name = reader.ReadString16(),
                 Position = reader.Read<Vector3>() // Uses a registered Vector3 serializer
@@ -387,15 +374,11 @@ public static class GameSerializers {
     }
     
     private static void RegisterItemSerializers() {
-        BinaryPack.RegisterAllWriters(
+        BinaryPack.RegisterWithCollections(
             (ref BinaryPackWriter writer, in Item item) => {
                 writer.WriteInt(item.Id);
                 writer.WriteFloat(item.Durability);
             },
-            new UnmanagedPackArrayStrategy<Item>()
-        );
-        
-        BinaryPack.RegisterAllReaders(
             (ref BinaryPackReader reader) => new Item {
                 Id = reader.ReadInt(),
                 Durability = reader.ReadFloat()
@@ -405,16 +388,12 @@ public static class GameSerializers {
     }
     
     private static void RegisterVector3Serializers() {
-        BinaryPack.RegisterAllWriters(
+        BinaryPack.RegisterWithCollections(
             (ref BinaryPackWriter writer, in Vector3 vec) => {
                 writer.WriteFloat(vec.X);
                 writer.WriteFloat(vec.Y);
                 writer.WriteFloat(vec.Z);
             },
-            new UnmanagedPackArrayStrategy<Vector3>()
-        );
-        
-        BinaryPack.RegisterAllReaders(
             (ref BinaryPackReader reader) => new Vector3 {
                 X = reader.ReadFloat(),
                 Y = reader.ReadFloat(),

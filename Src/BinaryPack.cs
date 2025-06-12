@@ -16,69 +16,49 @@ namespace FFS.Libraries.StaticPack {
     #endif
     public static class BinaryPack {
         static BinaryPack() {
-            RegisterAllReaders(static (ref BinaryPackReader reader) => reader.ReadSByte(), new UnmanagedPackArrayStrategy<sbyte>());
-            RegisterAllReaders(static (ref BinaryPackReader reader) => reader.ReadByte(), new UnmanagedPackArrayStrategy<byte>());
-            RegisterAllReaders(static (ref BinaryPackReader reader) => reader.ReadShort(), new UnmanagedPackArrayStrategy<short>());
-            RegisterAllReaders(static (ref BinaryPackReader reader) => reader.ReadUshort(), new UnmanagedPackArrayStrategy<ushort>());
-            RegisterAllReaders(static (ref BinaryPackReader reader) => reader.ReadInt(), new UnmanagedPackArrayStrategy<int>());
-            RegisterAllReaders(static (ref BinaryPackReader reader) => reader.ReadUint(), new UnmanagedPackArrayStrategy<uint>());
-            RegisterAllReaders(static (ref BinaryPackReader reader) => reader.ReadLong(), new UnmanagedPackArrayStrategy<long>());
-            RegisterAllReaders(static (ref BinaryPackReader reader) => reader.ReadUlong(), new UnmanagedPackArrayStrategy<ulong>());
-            RegisterAllReaders(static (ref BinaryPackReader reader) => reader.ReadChar(), new UnmanagedPackArrayStrategy<char>());
-            RegisterAllReaders(static (ref BinaryPackReader reader) => reader.ReadFloat(), new UnmanagedPackArrayStrategy<float>());
-            RegisterAllReaders(static (ref BinaryPackReader reader) => reader.ReadDouble(), new UnmanagedPackArrayStrategy<double>());
-            RegisterAllReaders(static (ref BinaryPackReader reader) => reader.ReadBool(), new UnmanagedPackArrayStrategy<bool>());
-            RegisterAllReaders(static (ref BinaryPackReader reader) => reader.ReadDateTime(), new UnmanagedPackArrayStrategy<DateTime>());
-            RegisterAllReaders(static (ref BinaryPackReader reader) => reader.ReadGuid(), new UnmanagedPackArrayStrategy<Guid>());
+            RegisterWithCollections(static (ref BinaryPackWriter writer, in sbyte value) => writer.WriteSbyte(value),static (ref BinaryPackReader reader) => reader.ReadSByte(), new UnmanagedPackArrayStrategy<sbyte>());
+            RegisterWithCollections(static (ref BinaryPackWriter writer, in byte value) => writer.WriteByte(value),static (ref BinaryPackReader reader) => reader.ReadByte(), new UnmanagedPackArrayStrategy<byte>());
+            RegisterWithCollections(static (ref BinaryPackWriter writer, in short value) => writer.WriteShort(value),static (ref BinaryPackReader reader) => reader.ReadShort(), new UnmanagedPackArrayStrategy<short>());
+            RegisterWithCollections(static (ref BinaryPackWriter writer, in ushort value) => writer.WriteUshort(value),static (ref BinaryPackReader reader) => reader.ReadUshort(), new UnmanagedPackArrayStrategy<ushort>());
+            RegisterWithCollections(static (ref BinaryPackWriter writer, in int value) => writer.WriteInt(value),static (ref BinaryPackReader reader) => reader.ReadInt(), new UnmanagedPackArrayStrategy<int>());
+            RegisterWithCollections(static (ref BinaryPackWriter writer, in uint value) => writer.WriteUint(value),static (ref BinaryPackReader reader) => reader.ReadUint(), new UnmanagedPackArrayStrategy<uint>());
+            RegisterWithCollections(static (ref BinaryPackWriter writer, in long value) => writer.WriteLong(value),static (ref BinaryPackReader reader) => reader.ReadLong(), new UnmanagedPackArrayStrategy<long>());
+            RegisterWithCollections(static (ref BinaryPackWriter writer, in ulong value) => writer.WriteUlong(value),static (ref BinaryPackReader reader) => reader.ReadUlong(), new UnmanagedPackArrayStrategy<ulong>());
+            RegisterWithCollections(static (ref BinaryPackWriter writer, in char value) => writer.WriteChar(value),static (ref BinaryPackReader reader) => reader.ReadChar(), new UnmanagedPackArrayStrategy<char>());
+            RegisterWithCollections(static (ref BinaryPackWriter writer, in float value) => writer.WriteFloat(value),static (ref BinaryPackReader reader) => reader.ReadFloat(), new UnmanagedPackArrayStrategy<float>());
+            RegisterWithCollections(static (ref BinaryPackWriter writer, in double value) => writer.WriteDouble(value),static (ref BinaryPackReader reader) => reader.ReadDouble(), new UnmanagedPackArrayStrategy<double>());
+            RegisterWithCollections(static (ref BinaryPackWriter writer, in bool value) => writer.WriteBool(value),static (ref BinaryPackReader reader) => reader.ReadBool(), new UnmanagedPackArrayStrategy<bool>());
+            RegisterWithCollections(static (ref BinaryPackWriter writer, in DateTime value) => writer.WriteDateTime(value),static (ref BinaryPackReader reader) => reader.ReadDateTime(), new UnmanagedPackArrayStrategy<DateTime>());
+            RegisterWithCollections(static (ref BinaryPackWriter writer, in Guid value) => writer.WriteGuid(in value),static (ref BinaryPackReader reader) => reader.ReadGuid(), new UnmanagedPackArrayStrategy<Guid>());
 
-            RegisterAllReaders(static (ref BinaryPackReader reader) => reader.ReadString16(), new ClassPackArrayStrategy<string>());
-
-            RegisterAllWriters(static (ref BinaryPackWriter writer, in sbyte value) => writer.WriteSbyte(value), new UnmanagedPackArrayStrategy<sbyte>());
-            RegisterAllWriters(static (ref BinaryPackWriter writer, in byte value) => writer.WriteByte(value), new UnmanagedPackArrayStrategy<byte>());
-            RegisterAllWriters(static (ref BinaryPackWriter writer, in short value) => writer.WriteShort(value), new UnmanagedPackArrayStrategy<short>());
-            RegisterAllWriters(static (ref BinaryPackWriter writer, in ushort value) => writer.WriteUshort(value), new UnmanagedPackArrayStrategy<ushort>());
-            RegisterAllWriters(static (ref BinaryPackWriter writer, in int value) => writer.WriteInt(value), new UnmanagedPackArrayStrategy<int>());
-            RegisterAllWriters(static (ref BinaryPackWriter writer, in uint value) => writer.WriteUint(value), new UnmanagedPackArrayStrategy<uint>());
-            RegisterAllWriters(static (ref BinaryPackWriter writer, in long value) => writer.WriteLong(value), new UnmanagedPackArrayStrategy<long>());
-            RegisterAllWriters(static (ref BinaryPackWriter writer, in ulong value) => writer.WriteUlong(value), new UnmanagedPackArrayStrategy<ulong>());
-            RegisterAllWriters(static (ref BinaryPackWriter writer, in char value) => writer.WriteChar(value), new UnmanagedPackArrayStrategy<char>());
-            RegisterAllWriters(static (ref BinaryPackWriter writer, in float value) => writer.WriteFloat(value), new UnmanagedPackArrayStrategy<float>());
-            RegisterAllWriters(static (ref BinaryPackWriter writer, in double value) => writer.WriteDouble(value), new UnmanagedPackArrayStrategy<double>());
-            RegisterAllWriters(static (ref BinaryPackWriter writer, in bool value) => writer.WriteBool(value), new UnmanagedPackArrayStrategy<bool>());
-            RegisterAllWriters(static (ref BinaryPackWriter writer, in DateTime value) => writer.WriteDateTime(value), new UnmanagedPackArrayStrategy<DateTime>());
-            RegisterAllWriters(static (ref BinaryPackWriter writer, in Guid value) => writer.WriteGuid(in value), new UnmanagedPackArrayStrategy<Guid>());
-
-            RegisterAllWriters(static (ref BinaryPackWriter writer, in string value) => writer.WriteString16(value), new ClassPackArrayStrategy<string>());
+            RegisterWithCollections(static (ref BinaryPackWriter writer, in string value) => writer.WriteString16(value), static (ref BinaryPackReader reader) => reader.ReadString16(), new ClassPackArrayStrategy<string>());
         }
 
         public static void Init() {
             // Static constructor
         }
-        
-        [MethodImpl(AggressiveInlining)]
-        public static void RegisterAllReaders<T, S>(BinaryReader<T> reader, S strategy = default) where S : IPackArrayStrategy<T> {
-            BinaryPack<T>.RegisterReader(reader);
-            strategy.RegisterReader();
-            BinaryPack<T[][]>.RegisterReader(static (ref BinaryPackReader reader) => reader.ReadArray<T[]>());
-            BinaryPack<T[][][]>.RegisterReader(static (ref BinaryPackReader reader) => reader.ReadArray<T[][]>());
-            BinaryPack<List<T>>.RegisterReader(static (ref BinaryPackReader reader) => reader.ReadList<T>());
-            BinaryPack<LinkedList<T>>.RegisterReader(static (ref BinaryPackReader reader) => reader.ReadLinkedList<T>());
-            BinaryPack<Queue<T>>.RegisterReader(static (ref BinaryPackReader reader) => reader.ReadQueue<T>());
-            BinaryPack<Stack<T>>.RegisterReader(static (ref BinaryPackReader reader) => reader.ReadStack<T>());
-            BinaryPack<HashSet<T>>.RegisterReader(static (ref BinaryPackReader reader) => reader.ReadHashSet<T>());
-        }
 
         [MethodImpl(AggressiveInlining)]
-        public static void RegisterAllWriters<T, S>(BinaryWriter<T> writer, S strategy = default) where S : IPackArrayStrategy<T> {
-            BinaryPack<T>.RegisterWriter(writer);
-            strategy.RegisterWriters();
-            BinaryPack<T[][]>.RegisterWriter(static (ref BinaryPackWriter writer, in T[][] value) => writer.WriteArray(value));
-            BinaryPack<T[][][]>.RegisterWriter(static (ref BinaryPackWriter writer, in T[][][] value) => writer.WriteArray(value)); 
-            BinaryPack<List<T>>.RegisterWriter(static (ref BinaryPackWriter writer, in List<T> value) => writer.WriteList(value));
-            BinaryPack<LinkedList<T>>.RegisterWriter(static (ref BinaryPackWriter writer, in LinkedList<T> value) => writer.WriteLinkedList(value));
-            BinaryPack<Queue<T>>.RegisterWriter(static (ref BinaryPackWriter writer, in Queue<T> value) => writer.WriteQueue(value));
-            BinaryPack<Stack<T>>.RegisterWriter(static (ref BinaryPackWriter writer, in Stack<T> value) => writer.WriteStack(value));
-            BinaryPack<HashSet<T>>.RegisterWriter(static (ref BinaryPackWriter writer, in HashSet<T> value) => writer.WriteHashSet(value));
+        public static void RegisterWithCollections<T, S>(BinaryWriter<T> writer, BinaryReader<T> reader, S strategy = default) where S : IPackArrayStrategy<T> {
+            BinaryPack<T>.Register(writer, reader);
+            strategy.Register();
+            BinaryPack<T[][]>.Register(static (ref BinaryPackWriter writer, in T[][] value) => writer.WriteArray(value), static (ref BinaryPackReader reader) => reader.ReadArray<T[]>());
+            BinaryPack<T[][][]>.Register(static (ref BinaryPackWriter writer, in T[][][] value) => writer.WriteArray(value), static (ref BinaryPackReader reader) => reader.ReadArray<T[][]>());
+            BinaryPack<List<T>>.Register(static (ref BinaryPackWriter writer, in List<T> value) => writer.WriteList(value), static (ref BinaryPackReader reader) => reader.ReadList<T>());
+            BinaryPack<LinkedList<T>>.Register(static (ref BinaryPackWriter writer, in LinkedList<T> value) => writer.WriteLinkedList(value), static (ref BinaryPackReader reader) => reader.ReadLinkedList<T>());
+            BinaryPack<Queue<T>>.Register(static (ref BinaryPackWriter writer, in Queue<T> value) => writer.WriteQueue(value), static (ref BinaryPackReader reader) => reader.ReadQueue<T>());
+            BinaryPack<Stack<T>>.Register(static (ref BinaryPackWriter writer, in Stack<T> value) => writer.WriteStack(value), static (ref BinaryPackReader reader) => reader.ReadStack<T>());
+            BinaryPack<HashSet<T>>.Register(static (ref BinaryPackWriter writer, in HashSet<T> value) => writer.WriteHashSet(value), static (ref BinaryPackReader reader) => reader.ReadHashSet<T>());
+        }
+        
+        [MethodImpl(AggressiveInlining)]
+        public static void Register<T>(BinaryWriter<T> writer, BinaryReader<T> reader) {
+            BinaryPack<T>.Register(writer, reader);
+        }
+        
+        [MethodImpl(AggressiveInlining)]
+        public static bool IsRegistered<T>() {
+            return BinaryPack<T>.IsRegistered();
         }
 
         [MethodImpl(AggressiveInlining)]
@@ -115,7 +95,7 @@ namespace FFS.Libraries.StaticPack {
         }
 
         [MethodImpl(AggressiveInlining)]
-        public static void Write<T>(this ref BinaryPackWriter writer, in T value) => BinaryPack<T>.Write(ref writer, in value);
+        public static void WriteAny<T>(this ref BinaryPackWriter writer, in T value) => BinaryPack<T>.Write(ref writer, in value);
 
         [MethodImpl(AggressiveInlining)]
         public static byte[] WriteToBytes<T>(this T value, uint byteSizeHint = 4096, bool gzip = false) {
@@ -152,12 +132,12 @@ namespace FFS.Libraries.StaticPack {
     [Il2CppSetOption(Option.ArrayBoundsChecks, false)]
     [Il2CppEagerStaticClassConstruction]
     #endif
-    public static class BinaryPack<T> {
+    internal static class BinaryPack<T> {
         private static BinaryReader<T> _reader;
         private static BinaryWriter<T> _writer;
 
         [MethodImpl(AggressiveInlining)]
-        public static T Read(ref BinaryPackReader reader) {
+        internal static T Read(ref BinaryPackReader reader) {
             #if DEBUG || FFS_PACK_ENABLE_DEBUG
             if (_reader == null) {
                 throw new Exception($"Reader for type {typeof(T)} not defined");
@@ -167,7 +147,7 @@ namespace FFS.Libraries.StaticPack {
         }
 
         [MethodImpl(AggressiveInlining)]
-        public static void Write(ref BinaryPackWriter writer, in T value) {
+        internal static void Write(ref BinaryPackWriter writer, in T value) {
             #if DEBUG || FFS_PACK_ENABLE_DEBUG
             if (_writer == null) {
                 throw new Exception($"Writer for type {typeof(T)} not defined");
@@ -177,22 +157,13 @@ namespace FFS.Libraries.StaticPack {
         }
 
         [MethodImpl(AggressiveInlining)]
-        public static bool HasWriter() {
-            return _writer != null;
+        internal static bool IsRegistered() {
+            return _reader != null && _writer != null;
         }
 
         [MethodImpl(AggressiveInlining)]
-        public static bool HasReader() {
-            return _reader != null;
-        }
-
-        [MethodImpl(AggressiveInlining)]
-        public static void RegisterReader(BinaryReader<T> reader) {
+        internal static void Register(BinaryWriter<T> writer, BinaryReader<T> reader) {
             _reader = reader ?? throw new Exception($"Reader for type {typeof(T)} is null");
-        }
-
-        [MethodImpl(AggressiveInlining)]
-        public static void RegisterWriter(BinaryWriter<T> writer) {
             _writer = writer ?? throw new Exception($"Writer for type {typeof(T)} is null");
         }
     }
