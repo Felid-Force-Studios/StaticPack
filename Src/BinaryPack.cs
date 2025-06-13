@@ -62,7 +62,7 @@ namespace FFS.Libraries.StaticPack {
         }
 
         [MethodImpl(AggressiveInlining)]
-        public static T ReadDyn<T>(this ref BinaryPackReader reader) => BinaryPack<T>.Read(ref reader);
+        public static T Read<T>(this ref BinaryPackReader reader) => BinaryPack<T>.Read(ref reader);
 
         [MethodImpl(AggressiveInlining)]
         public static T ReadFromBytes<T>(this byte[] bytes, bool gzip = false, uint byteSizeHint = 4096) {
@@ -95,7 +95,7 @@ namespace FFS.Libraries.StaticPack {
         }
 
         [MethodImpl(AggressiveInlining)]
-        public static void WriteDyn<T>(this ref BinaryPackWriter writer, in T value) => BinaryPack<T>.Write(ref writer, in value);
+        public static void Write<T>(this ref BinaryPackWriter writer, in T value) => BinaryPack<T>.Write(ref writer, in value);
 
         [MethodImpl(AggressiveInlining)]
         public static byte[] WriteToBytes<T>(this T value, uint byteSizeHint = 4096, bool gzip = false) {
