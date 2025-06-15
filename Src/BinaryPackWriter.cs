@@ -125,7 +125,7 @@ namespace FFS.Libraries.StaticPack {
         [MethodImpl(AggressiveInlining)]
         private void ValidatePosition(uint position, uint size) {
             if (position > Position) throw new Exception($"Position {position} more than current offset {Position}");
-            if (position + size >= Buffer.Length) throw new Exception($"Position {position} + size {size} more than current capacity {Buffer.Length}");
+            if (position + size > Buffer.Length) throw new Exception($"Position {position} + size {size} more than current capacity {Buffer.Length}");
         }
 
         [MethodImpl(AggressiveInlining)]
