@@ -10,7 +10,7 @@
         "url": "https://github.com/Felid-Force-Studios/StaticPack.git"
     },
     "displayName": "Static Pack",
-    "version": "1.0.2",
+    "version": "1.0.3",
     "unity": "2020.3",
     "description": "C# Simple binary serialization library",
     "keywords":

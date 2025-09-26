@@ -8,7 +8,7 @@
         <AssemblyName>FFS.StaticPack</AssemblyName>
         <RootNamespace>FFS.Libraries.StaticPack</RootNamespace>
         <GeneratePackageOnBuild>true</GeneratePackageOnBuild>
-        <Version>1.0.2</Version>
+        <Version>1.0.3</Version>
         <Authors>Felid-Force-Studios</Authors>
         <Description>C# Simple binary serialization library</Description>
         <Copyright>Felid-Force-Studios</Copyright>

@@ -7,6 +7,7 @@ using Unity.IL2CPP.CompilerServices;
 namespace FFS.Libraries.StaticPack {
     public interface IPackArrayStrategy {
         public void Register();
+        public bool IsUnmanaged();
     }
 
     public interface IPackArrayStrategy<T> : IPackArrayStrategy {
@@ -56,6 +57,9 @@ namespace FFS.Libraries.StaticPack {
             BinaryPack<T[,]>.Register(static (ref BinaryPackWriter writer, in T[,] value) => writer.WriteArrayUnmanaged(value), static (ref BinaryPackReader reader) => reader.ReadArray2DUnmanaged<T>());
             BinaryPack<T[,,]>.Register(static (ref BinaryPackWriter writer, in T[,,] value) => writer.WriteArrayUnmanaged(value), static (ref BinaryPackReader reader) => reader.ReadArray3DUnmanaged<T>());
         }
+
+        [MethodImpl(AggressiveInlining)]
+        public bool IsUnmanaged() => true;
     }
 
     #if ENABLE_IL2CPP
@@ -94,6 +98,9 @@ namespace FFS.Libraries.StaticPack {
             BinaryPack<T[,]>.Register(static (ref BinaryPackWriter writer, in T[,] value) => writer.WriteArray(value), static (ref BinaryPackReader reader) => reader.ReadArray2D<T>());
             BinaryPack<T[,,]>.Register(static (ref BinaryPackWriter writer, in T[,,] value) => writer.WriteArray(value), static (ref BinaryPackReader reader) => reader.ReadArray3D<T>());
         }
+
+        [MethodImpl(AggressiveInlining)]
+        public bool IsUnmanaged() => false;
     }
 
     #if ENABLE_IL2CPP
@@ -131,5 +138,8 @@ namespace FFS.Libraries.StaticPack {
             BinaryPack<T[,]>.Register(static (ref BinaryPackWriter writer, in T[,] value) => writer.WriteArray(value), static (ref BinaryPackReader reader) => reader.ReadArray2D<T>());
             BinaryPack<T[,,]>.Register(static (ref BinaryPackWriter writer, in T[,,] value) => writer.WriteArray(value), static (ref BinaryPackReader reader) => reader.ReadArray3D<T>());
         }
+
+        [MethodImpl(AggressiveInlining)]
+        public bool IsUnmanaged() => false;
     }
 }
