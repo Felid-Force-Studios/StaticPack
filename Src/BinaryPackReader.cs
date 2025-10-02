@@ -573,6 +573,7 @@ namespace FFS.Libraries.StaticPack {
             }
         }
 
+        #if !FFS_PACK_DISABLE_MULTI_ARRAYS && !UNITY_WEBGL
         [MethodImpl(AggressiveInlining)]
         public T[,] ReadArray2DUnmanaged<T>() where T : unmanaged {
             if (ReadNullFlag()) return null;
@@ -635,6 +636,7 @@ namespace FFS.Libraries.StaticPack {
 
             return res;
         }
+        #endif
 
         [MethodImpl(AggressiveInlining)]
         public T[] ReadArray<T>() {
@@ -688,6 +690,8 @@ namespace FFS.Libraries.StaticPack {
             }
         }
 
+        
+        #if !FFS_PACK_DISABLE_MULTI_ARRAYS && !UNITY_WEBGL
         [MethodImpl(AggressiveInlining)]
         public T[,] ReadArray2D<T>() {
             if (ReadNullFlag()) return null;
@@ -725,6 +729,7 @@ namespace FFS.Libraries.StaticPack {
 
             return res;
         }
+        #endif
 
         [MethodImpl(AggressiveInlining)]
         public void SkipArrayHeaders() {

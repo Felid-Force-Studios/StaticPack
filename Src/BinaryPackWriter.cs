@@ -499,6 +499,7 @@ namespace FFS.Libraries.StaticPack {
             }
         }
         
+        #if !FFS_PACK_DISABLE_MULTI_ARRAYS && !UNITY_WEBGL
         [MethodImpl(AggressiveInlining)]
         public void WriteArrayUnmanaged<T>(T[,] value) where T : unmanaged {
             if (WriteNotNullFlag(value)) {
@@ -556,6 +557,7 @@ namespace FFS.Libraries.StaticPack {
                 WriteUintAt(position, Position - (position + sizeof(uint)));
             }
         }
+        #endif
         
         [MethodImpl(AggressiveInlining)]
         public void WriteArray<T>(T[] value) {
@@ -591,6 +593,7 @@ namespace FFS.Libraries.StaticPack {
             }
         }
 
+        #if !FFS_PACK_DISABLE_MULTI_ARRAYS && !UNITY_WEBGL
         [MethodImpl(AggressiveInlining)]
         public void WriteArray<T>(T[,] value) {
             if (WriteNotNullFlag(value)) {
@@ -632,6 +635,7 @@ namespace FFS.Libraries.StaticPack {
                 WriteUintAt(position, Position - (position + sizeof(uint)));
             }
         }
+        #endif
 
         [MethodImpl(AggressiveInlining)]
         public void WriteList<T>(List<T> value, int count = -1) {
