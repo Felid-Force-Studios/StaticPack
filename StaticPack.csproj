@@ -1,7 +1,8 @@
 <Project Sdk="Microsoft.NET.Sdk">
 
     <PropertyGroup>
-        <TargetFramework>netstandard2.1</TargetFramework>
+        <OutputType>library</OutputType>
+        <TargetFrameworks>net9.0;net8.0;net7.0;net6.0;netstandard2.1</TargetFrameworks>
         <LangVersion>9</LangVersion>
         <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
         <Nullable>disable</Nullable>
@@ -12,7 +13,7 @@
         <Authors>Felid-Force-Studios</Authors>
         <Description>C# Simple binary serialization library</Description>
         <Copyright>Felid-Force-Studios</Copyright>
-        <PackageLicense>https://github.com/Felid-Force-Studios/StaticPack/blob/master/LICENSE</PackageLicense>
+        <PackageLicense>https://github.com/Felid-Force-Studios/StaticPack/blob/master/LICENSE.md</PackageLicense>
         <PackageTags>binary; gamedev; unity; staticpack</PackageTags>
         <RepositoryUrl>https://github.com/Felid-Force-Studios/StaticPack</RepositoryUrl>
     </PropertyGroup>
@@ -33,24 +34,15 @@
         <Optimize>true</Optimize>
         <OutputPath>bin\Release\</OutputPath>
         <WarningLevel>4</WarningLevel>
+        <PackageReadmeFile>README.md</PackageReadmeFile>
     </PropertyGroup>
 
     <ItemGroup>
-        <Content Include="README.md"/>
+        <Content Include="README.md" Pack="true" PackagePath=""/>
     </ItemGroup>
     <ItemGroup>
         <None Remove="**/*.meta"/>
         <None Remove="LICENSE.meta"/>
-    </ItemGroup>
-    <ItemGroup>
-      <PackageReference Include="ErrorProne.NET.CoreAnalyzers" Version="0.7.0-beta.1">
-        <PrivateAssets>all</PrivateAssets>
-        <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
-      </PackageReference>
-      <PackageReference Include="ErrorProne.NET.Structs" Version="0.6.1-beta.1">
-        <PrivateAssets>all</PrivateAssets>
-        <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
-      </PackageReference>
     </ItemGroup>
 
 </Project>
