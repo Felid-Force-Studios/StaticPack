@@ -6,31 +6,37 @@
         <LangVersion>9</LangVersion>
         <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
         <Nullable>disable</Nullable>
-        <AssemblyName>FFS.StaticPack</AssemblyName>
         <RootNamespace>FFS.Libraries.StaticPack</RootNamespace>
         <GeneratePackageOnBuild>true</GeneratePackageOnBuild>
-        <Version>1.0.3</Version>
+        <Version>1.0.5</Version>
         <Authors>Felid-Force-Studios</Authors>
         <Description>C# Simple binary serialization library</Description>
         <Copyright>Felid-Force-Studios</Copyright>
         <PackageLicense>https://github.com/Felid-Force-Studios/StaticPack/blob/master/LICENSE.md</PackageLicense>
         <PackageTags>binary; gamedev; unity; staticpack</PackageTags>
         <RepositoryUrl>https://github.com/Felid-Force-Studios/StaticPack</RepositoryUrl>
+        <IncludeSymbols>true</IncludeSymbols>
+        <SymbolPackageFormat>snupkg</SymbolPackageFormat>
     </PropertyGroup>
 
     <PropertyGroup Condition="'$(Configuration)' == 'Debug'">
+        <PackageId>FFS.StaticPack.Debug</PackageId>
+        <AssemblyName>FFS.StaticPack.Debug</AssemblyName>
         <PlatformTarget>AnyCPU</PlatformTarget>
         <DebugSymbols>true</DebugSymbols>
-        <DebugType>full</DebugType>
+        <DebugType>portable</DebugType>
         <Optimize>false</Optimize>
         <OutputPath>bin\Debug\</OutputPath>
         <DefineConstants>FFS_PACK_ENABLE_DEBUG</DefineConstants>
         <WarningLevel>4</WarningLevel>
+        <PackageReadmeFile>README.md</PackageReadmeFile>
     </PropertyGroup>
 
     <PropertyGroup Condition="'$(Configuration)' == 'Release'">
+        <PackageId>FFS.StaticPack</PackageId>
+        <AssemblyName>FFS.StaticPack</AssemblyName>
         <PlatformTarget>AnyCPU</PlatformTarget>
-        <DebugType>pdbonly</DebugType>
+        <DebugType>portable</DebugType>
         <Optimize>true</Optimize>
         <OutputPath>bin\Release\</OutputPath>
         <WarningLevel>4</WarningLevel>
