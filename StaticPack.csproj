@@ -8,11 +8,12 @@
         <Nullable>disable</Nullable>
         <RootNamespace>FFS.Libraries.StaticPack</RootNamespace>
         <GeneratePackageOnBuild>true</GeneratePackageOnBuild>
-        <Version>1.2.6</Version>
+        <Version>2.0.0</Version>
         <Authors>Felid-Force-Studios</Authors>
         <Description>C# Simple binary serialization library</Description>
         <Copyright>Felid-Force-Studios</Copyright>
-        <PackageLicense>https://github.com/Felid-Force-Studios/StaticPack/blob/master/LICENSE.md</PackageLicense>
+        <PackageLicenseFile>LICENSE.md</PackageLicenseFile>
+        <PackageProjectUrl>https://github.com/Felid-Force-Studios/StaticPack</PackageProjectUrl>
         <PackageTags>binary; gamedev; unity; staticpack</PackageTags>
         <RepositoryUrl>https://github.com/Felid-Force-Studios/StaticPack</RepositoryUrl>
         <IncludeSymbols>true</IncludeSymbols>
@@ -45,10 +46,10 @@
 
     <ItemGroup>
         <Content Include="README.md" Pack="true" PackagePath=""/>
+        <Content Include="LICENSE.md" Pack="true" PackagePath=""/>
     </ItemGroup>
     <ItemGroup>
         <None Remove="**/*.meta"/>
-        <None Remove="LICENSE.meta"/>
         <None Remove="Runtime/**/*"/>
         <Content Remove="Runtime/**/*"/>
         <Compile Remove="Runtime/**/*.cs"/>

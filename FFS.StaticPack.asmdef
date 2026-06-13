@@ -1,6 +1,9 @@
 {
     "name": "FFS.StaticPack",
     "rootNamespace": "FFS.Libraries.StaticPack",
+    "references": [
+        "Unity.Burst"
+    ],
     "includePlatforms": [],
     "excludePlatforms": [],
     "allowUnsafeCode": true,
@@ -10,6 +13,12 @@
     ],
     "autoReferenced": true,
     "defineConstraints": [],
-    "versionDefines": [],
-    "noEngineReferences": true
+    "versionDefines": [
+        {
+            "name": "com.unity.burst",
+            "expression": "1.8.0",
+            "define": "FFS_BURST"
+        }
+    ],
+    "noEngineReferences": false
 }

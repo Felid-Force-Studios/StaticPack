@@ -1,4 +1,5 @@
-﻿using System.Runtime.CompilerServices;
+﻿using System;
+using System.Runtime.CompilerServices;
 using static System.Runtime.CompilerServices.MethodImplOptions;
 #if ENABLE_IL2CPP
 using Unity.IL2CPP.CompilerServices;
@@ -7,24 +8,35 @@ using Unity.IL2CPP.CompilerServices;
 namespace FFS.Libraries.StaticPack {
     public interface IPackArrayStrategy {
         public void Register();
-        public bool IsUnmanaged();
     }
 
     public interface IPackArrayStrategy<T> : IPackArrayStrategy {
         public T[] ReadArray(ref BinaryPackReader reader);
-        public void ReadArray(ref BinaryPackReader reader, ref T[] result);
-        public void ReadArray(ref BinaryPackReader reader, ref T[] result, int idx);
-        #if !FFS_PACK_DISABLE_MULTI_ARRAYS && !UNITY_WEBGL
+
+        /// <summary> Returns the number of elements read into <paramref name="result"/>, or -1 with <paramref name="result"/> left untouched when the null flag was read. </summary>
+        public int ReadArray(ref BinaryPackReader reader, ref T[] result);
+
+        /// <summary>
+        /// Returns the number of elements read into <paramref name="result"/> starting at <paramref name="idx"/>,
+        /// or -1 when the null flag was read - <paramref name="result"/> is left untouched in that case.
+        /// </summary>
+        public int ReadArray(ref BinaryPackReader reader, ref T[] result, int idx);
+
+        /// <summary> Throws when multi-dimensional arrays are compiled out (FFS_PACK_DISABLE_MULTI_ARRAYS, UNITY_WEBGL). </summary>
         public T[,] ReadArray2D(ref BinaryPackReader reader);
+
+        /// <inheritdoc cref="ReadArray2D"/>
         public T[,,] ReadArray3D(ref BinaryPackReader reader);
-        #endif
+
         public void WriteArray(ref BinaryPackWriter writer, T[] value);
+
         public void WriteArray(ref BinaryPackWriter writer, T[] value, int idx, int count);
-        
-        #if !FFS_PACK_DISABLE_MULTI_ARRAYS && !UNITY_WEBGL
+
+        /// <inheritdoc cref="ReadArray2D"/>
         public void WriteArray(ref BinaryPackWriter writer, T[,] value);
+
+        /// <inheritdoc cref="ReadArray2D"/>
         public void WriteArray(ref BinaryPackWriter writer, T[,,] value);
-        #endif
     }
 
     #if ENABLE_IL2CPP
@@ -41,13 +53,21 @@ namespace FFS.Libraries.StaticPack {
 
         [MethodImpl(AggressiveInlining)]
         public T[,,] ReadArray3D(ref BinaryPackReader reader) => reader.ReadArray3DUnmanaged<T>();
+        #else
+        public T[,] ReadArray2D(ref BinaryPackReader reader) {
+            throw new NotSupportedException("[StaticPack] multi-dimensional arrays are compiled out (FFS_PACK_DISABLE_MULTI_ARRAYS / UNITY_WEBGL)");
+        }
+
+        public T[,,] ReadArray3D(ref BinaryPackReader reader) {
+            throw new NotSupportedException("[StaticPack] multi-dimensional arrays are compiled out (FFS_PACK_DISABLE_MULTI_ARRAYS / UNITY_WEBGL)");
+        }
         #endif
 
         [MethodImpl(AggressiveInlining)]
-        public void ReadArray(ref BinaryPackReader reader, ref T[] result) => reader.ReadArrayUnmanaged(ref result);
+        public int ReadArray(ref BinaryPackReader reader, ref T[] result) => reader.ReadArrayUnmanaged(ref result);
 
         [MethodImpl(AggressiveInlining)]
-        public void ReadArray(ref BinaryPackReader reader, ref T[] result, int idx) => reader.ReadArrayUnmanaged(ref result, idx);
+        public int ReadArray(ref BinaryPackReader reader, ref T[] result, int idx) => reader.ReadArrayUnmanaged(ref result, idx);
 
         [MethodImpl(AggressiveInlining)]
         public void WriteArray(ref BinaryPackWriter writer, T[] value) => writer.WriteArrayUnmanaged(value);
@@ -61,6 +81,14 @@ namespace FFS.Libraries.StaticPack {
 
         [MethodImpl(AggressiveInlining)]
         public void WriteArray(ref BinaryPackWriter writer, T[,,] value) => writer.WriteArrayUnmanaged(value);
+        #else
+        public void WriteArray(ref BinaryPackWriter writer, T[,] value) {
+            throw new NotSupportedException("[StaticPack] multi-dimensional arrays are compiled out (FFS_PACK_DISABLE_MULTI_ARRAYS / UNITY_WEBGL)");
+        }
+
+        public void WriteArray(ref BinaryPackWriter writer, T[,,] value) {
+            throw new NotSupportedException("[StaticPack] multi-dimensional arrays are compiled out (FFS_PACK_DISABLE_MULTI_ARRAYS / UNITY_WEBGL)");
+        }
         #endif
 
         [MethodImpl(AggressiveInlining)]
@@ -68,13 +96,12 @@ namespace FFS.Libraries.StaticPack {
             BinaryPack<T?>.Register(static (ref BinaryPackWriter writer, in T? value) => writer.WriteNullable(in value), static (ref BinaryPackReader reader) => reader.ReadNullable<T>());
             BinaryPack<T[]>.Register(static (ref BinaryPackWriter writer, in T[] value) => writer.WriteArrayUnmanaged(value), static (ref BinaryPackReader reader) => reader.ReadArrayUnmanaged<T>());
             #if !FFS_PACK_DISABLE_MULTI_ARRAYS && !UNITY_WEBGL
-            BinaryPack<T[,]>.Register(static (ref BinaryPackWriter writer, in T[,] value) => writer.WriteArrayUnmanaged(value), static (ref BinaryPackReader reader) => reader.ReadArray2DUnmanaged<T>());
-            BinaryPack<T[,,]>.Register(static (ref BinaryPackWriter writer, in T[,,] value) => writer.WriteArrayUnmanaged(value), static (ref BinaryPackReader reader) => reader.ReadArray3DUnmanaged<T>());
+            BinaryPack<T[,]>.Register(static (ref BinaryPackWriter writer, in T[,] value) => writer.WriteArrayUnmanaged(value),
+                static (ref BinaryPackReader reader) => reader.ReadArray2DUnmanaged<T>());
+            BinaryPack<T[,,]>.Register(static (ref BinaryPackWriter writer, in T[,,] value) => writer.WriteArrayUnmanaged(value),
+                static (ref BinaryPackReader reader) => reader.ReadArray3DUnmanaged<T>());
             #endif
         }
-
-        [MethodImpl(AggressiveInlining)]
-        public bool IsUnmanaged() => true;
     }
 
     #if ENABLE_IL2CPP
@@ -91,13 +118,21 @@ namespace FFS.Libraries.StaticPack {
 
         [MethodImpl(AggressiveInlining)]
         public T[,,] ReadArray3D(ref BinaryPackReader reader) => reader.ReadArray3D<T>();
+        #else
+        public T[,] ReadArray2D(ref BinaryPackReader reader) {
+            throw new NotSupportedException("[StaticPack] multi-dimensional arrays are compiled out (FFS_PACK_DISABLE_MULTI_ARRAYS / UNITY_WEBGL)");
+        }
+
+        public T[,,] ReadArray3D(ref BinaryPackReader reader) {
+            throw new NotSupportedException("[StaticPack] multi-dimensional arrays are compiled out (FFS_PACK_DISABLE_MULTI_ARRAYS / UNITY_WEBGL)");
+        }
         #endif
 
         [MethodImpl(AggressiveInlining)]
-        public void ReadArray(ref BinaryPackReader reader, ref T[] result) => reader.ReadArray(ref result);
+        public int ReadArray(ref BinaryPackReader reader, ref T[] result) => reader.ReadArray(ref result);
 
         [MethodImpl(AggressiveInlining)]
-        public void ReadArray(ref BinaryPackReader reader, ref T[] result, int idx) => reader.ReadArray(ref result, idx);
+        public int ReadArray(ref BinaryPackReader reader, ref T[] result, int idx) => reader.ReadArray(ref result, idx);
 
         [MethodImpl(AggressiveInlining)]
         public void WriteArray(ref BinaryPackWriter writer, T[] value) => writer.WriteArray(value);
@@ -111,8 +146,16 @@ namespace FFS.Libraries.StaticPack {
 
         [MethodImpl(AggressiveInlining)]
         public void WriteArray(ref BinaryPackWriter writer, T[,,] value) => writer.WriteArray(value);
+        #else
+        public void WriteArray(ref BinaryPackWriter writer, T[,] value) {
+            throw new NotSupportedException("[StaticPack] multi-dimensional arrays are compiled out (FFS_PACK_DISABLE_MULTI_ARRAYS / UNITY_WEBGL)");
+        }
+
+        public void WriteArray(ref BinaryPackWriter writer, T[,,] value) {
+            throw new NotSupportedException("[StaticPack] multi-dimensional arrays are compiled out (FFS_PACK_DISABLE_MULTI_ARRAYS / UNITY_WEBGL)");
+        }
         #endif
-        
+
         [MethodImpl(AggressiveInlining)]
         public void Register() {
             BinaryPack<T?>.Register(static (ref BinaryPackWriter writer, in T? value) => writer.WriteNullable(in value), static (ref BinaryPackReader reader) => reader.ReadNullable<T>());
@@ -122,9 +165,6 @@ namespace FFS.Libraries.StaticPack {
             BinaryPack<T[,,]>.Register(static (ref BinaryPackWriter writer, in T[,,] value) => writer.WriteArray(value), static (ref BinaryPackReader reader) => reader.ReadArray3D<T>());
             #endif
         }
-
-        [MethodImpl(AggressiveInlining)]
-        public bool IsUnmanaged() => false;
     }
 
     #if ENABLE_IL2CPP
@@ -141,13 +181,21 @@ namespace FFS.Libraries.StaticPack {
 
         [MethodImpl(AggressiveInlining)]
         public T[,,] ReadArray3D(ref BinaryPackReader reader) => reader.ReadArray3D<T>();
+        #else
+        public T[,] ReadArray2D(ref BinaryPackReader reader) {
+            throw new NotSupportedException("[StaticPack] multi-dimensional arrays are compiled out (FFS_PACK_DISABLE_MULTI_ARRAYS / UNITY_WEBGL)");
+        }
+
+        public T[,,] ReadArray3D(ref BinaryPackReader reader) {
+            throw new NotSupportedException("[StaticPack] multi-dimensional arrays are compiled out (FFS_PACK_DISABLE_MULTI_ARRAYS / UNITY_WEBGL)");
+        }
         #endif
 
         [MethodImpl(AggressiveInlining)]
-        public void ReadArray(ref BinaryPackReader reader, ref T[] result) => reader.ReadArray(ref result);
+        public int ReadArray(ref BinaryPackReader reader, ref T[] result) => reader.ReadArray(ref result);
 
         [MethodImpl(AggressiveInlining)]
-        public void ReadArray(ref BinaryPackReader reader, ref T[] result, int idx) => reader.ReadArray(ref result, idx);
+        public int ReadArray(ref BinaryPackReader reader, ref T[] result, int idx) => reader.ReadArray(ref result, idx);
 
         [MethodImpl(AggressiveInlining)]
         public void WriteArray(ref BinaryPackWriter writer, T[] value) => writer.WriteArray(value);
@@ -161,6 +209,14 @@ namespace FFS.Libraries.StaticPack {
 
         [MethodImpl(AggressiveInlining)]
         public void WriteArray(ref BinaryPackWriter writer, T[,,] value) => writer.WriteArray(value);
+        #else
+        public void WriteArray(ref BinaryPackWriter writer, T[,] value) {
+            throw new NotSupportedException("[StaticPack] multi-dimensional arrays are compiled out (FFS_PACK_DISABLE_MULTI_ARRAYS / UNITY_WEBGL)");
+        }
+
+        public void WriteArray(ref BinaryPackWriter writer, T[,,] value) {
+            throw new NotSupportedException("[StaticPack] multi-dimensional arrays are compiled out (FFS_PACK_DISABLE_MULTI_ARRAYS / UNITY_WEBGL)");
+        }
         #endif
 
         [MethodImpl(AggressiveInlining)]
@@ -171,8 +227,5 @@ namespace FFS.Libraries.StaticPack {
             BinaryPack<T[,,]>.Register(static (ref BinaryPackWriter writer, in T[,,] value) => writer.WriteArray(value), static (ref BinaryPackReader reader) => reader.ReadArray3D<T>());
             #endif
         }
-
-        [MethodImpl(AggressiveInlining)]
-        public bool IsUnmanaged() => false;
     }
 }
